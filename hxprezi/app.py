@@ -1,47 +1,36 @@
+import logging
+import logging.config
+
 from flask import Flask
 
 from hxprezi import auth, api
-from hxprezi.extensions import db, jwt, migrate
+from hxprezi.extensions import cache, db, jwt, migrate
+from hxprezi.settings import ProdConfig
 
 
-def create_app(config=None, testing=False, cli=False):
-    """Application factory, used to create application
-    """
-    app = Flask('hxprezi')
+def create_app(config_object=ProdConfig):
+    """Application factory,"""
+    app = Flask(__name__.split('.')[0])
+    app.config.from_object(config_object)
+    logging.config.dictConfig(app.config['LOGGING'])
 
-    configure_app(app, testing)
-    configure_extensions(app, cli)
+    register_extensions(app)
     register_blueprints(app)
 
     return app
 
 
-def configure_app(app, testing=False):
-    """set configuration for application
-    """
-    # default configuration
-    app.config.from_object('hxprezi.config')
-
-    if testing is True:
-        # override with testing config
-        app.config.from_object('hxprezi.configtest')
-    else:
-        # override with env variable, fail silently if not set
-        app.config.from_envvar("HXPREZI_CONFIG", silent=True)
-
-
-def configure_extensions(app, cli):
-    """configure flask extensions
-    """
+def register_extensions(app):
+    """Register flask extensions."""
+    cache.init_app(app)
     db.init_app(app)
     jwt.init_app(app)
-
-    if cli is True:
-        migrate.init_app(app, db)
+    migrate.init_app(app, db)
+    return None
 
 
 def register_blueprints(app):
-    """register all blueprints for application
-    """
+    """Register flask blueprints."""
     app.register_blueprint(auth.views.blueprint)
     app.register_blueprint(api.views.blueprint)
+    return None

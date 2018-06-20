@@ -4,12 +4,23 @@ import pytest
 from hxprezi.models import User
 from hxprezi.app import create_app
 from hxprezi.extensions import db as _db
+from hxprezi.settings import TestConfig
 
 
 @pytest.fixture
 def app():
-    app = create_app(testing=True)
-    return app
+    _app = create_app(TestConfig)
+    ctx = _app.test_request_context()
+    ctx.push()
+
+    yield _app
+
+    ctx.pop()
+
+
+@pytest.fixture
+def testapp(app):
+    return TestApp(app)
 
 
 @pytest.fixture

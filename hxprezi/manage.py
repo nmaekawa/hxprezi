@@ -1,11 +1,23 @@
+from dotenv import load_dotenv
+import os
+
+# if dotenv file, load it now
+dotenv_path = os.environ.get('HXPREZI_DOTENV_PATH', None)
+if dotenv_path:
+    load_dotenv(dotenv_path)
+
 import click
+
 from flask.cli import FlaskGroup
+from flask.helpers import get_debug_flag
 
 from hxprezi.app import create_app
+from hxprezi.settings import DevConfig, ProdConfig
 
 
 def create_hxprezi(info):
-    return create_app(cli=True)
+    config = DevConfig if get_debug_flag() else ProdConfig
+    return create_app(config)
 
 
 @click.group(cls=FlaskGroup, create_app=create_hxprezi)

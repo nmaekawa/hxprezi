@@ -33,7 +33,9 @@ requirements = [
     'flask-marshmallow',
     'marshmallow-sqlalchemy',
     'python-dotenv',
-    'passlib'
+    'passlib',
+    'Flask-Caching',
+    'redis',
 ]
 
 test_requirements = [

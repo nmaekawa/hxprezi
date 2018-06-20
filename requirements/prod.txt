@@ -7,3 +7,6 @@ flask-jwt-extended
 marshmallow-sqlalchemy
 python-dotenv
 passlib
+
+Flask-Caching
+redis
