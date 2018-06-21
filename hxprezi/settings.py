@@ -16,6 +16,46 @@ class Config(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    MANIFESTS_PROXIES = {
+        'drs': {
+            'hostname': 'iiif.lib.harvard.edu',
+            'path': 'manifests',
+            'id_prefix': 'drs:',
+        },
+        'huam': {
+            'hostname': 'iiif.harvardartmuseums.org',
+            'path': 'manifests/object',
+            'id_prefix': '',
+        },
+        'local': {
+            'hostname': os.environ.get('MANIFESTS_HOSTNAME', 'manifests.vm'),
+            'path': 'manifests',
+            'id_prefix': '',
+        },
+    }
+    IMAGES_PROXIES = {
+        'drs': {
+            'hostname': 'ids.lib.harvard.edu',
+            'path': 'ids/iiif',
+            'id_prefix': '',
+        },
+        'huam': {
+            'hostname': 'ids.lib.harvard.edu',
+            'path': 'ids/iiif',
+            'id_prefix': '',
+        },
+        'local': {
+            'hostname': os.environ.get('IMAGES_HOSTNAME', 'images.vm'),
+            'path': 'iiif',
+            'id_prefix': '',
+        },
+    }
+    LOCAL_MANIFESTS_DIR = '/tmp/manifests'
+    HOSTNAME_PLACEHOLDERS = {
+        'manifests': 'oculus.harvardx.harvard.edu',
+        'images': 'images.harvardx.harvard.edu',
+    }
+
     # Logging config
     LOGGING = {
         'version': 1,
@@ -92,6 +132,11 @@ class TestConfig(Config):
     TESTING = True
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+    CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
+
+    LOCAL_MANIFESTS_DIR = os.path.join(Config.PROJECT_ROOT, 'tests/data')
+
 
 
 
