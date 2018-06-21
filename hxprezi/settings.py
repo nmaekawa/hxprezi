@@ -27,11 +27,6 @@ class Config(object):
             'path': 'manifests/object',
             'id_prefix': '',
         },
-        'local': {
-            'hostname': os.environ.get('MANIFESTS_HOSTNAME', 'manifests.vm'),
-            'path': 'manifests',
-            'id_prefix': '',
-        },
     }
     IMAGES_PROXIES = {
         'drs': {
@@ -44,17 +39,23 @@ class Config(object):
             'path': 'ids/iiif',
             'id_prefix': '',
         },
-        'local': {
+    }
+
+    HX_SERVERS = {
+        'manifests': {
+            'hostname': os.environ.get('MANIFESTS_HOSTNAME', 'manifests.vm'),
+            'path': 'manifests',
+            'id_prefix': '',
+            'placeholder': 'oculus.harvardx.harvard.edu',
+        },
+        'images': {
             'hostname': os.environ.get('IMAGES_HOSTNAME', 'images.vm'),
             'path': 'iiif',
             'id_prefix': '',
+            'placeholder': 'images.harvardx.harvard.edu',
         },
     }
-    LOCAL_MANIFESTS_DIR = '/tmp/manifests'
-    HOSTNAME_PLACEHOLDERS = {
-        'manifests': 'oculus.harvardx.harvard.edu',
-        'images': 'images.harvardx.harvard.edu',
-    }
+    HX_MANIFESTS_DIR = '/tmp/manifests'
 
     # Logging config
     LOGGING = {

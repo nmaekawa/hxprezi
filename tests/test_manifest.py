@@ -15,7 +15,7 @@ def test_manifest_in_cache(app):
 
     # get the fake manifest
     mresource = ManifestResource()
-    m = mresource.get(manifest_id)
+    m, code = mresource.get(manifest_id)
 
     assert m is not None
     assert m == manifest_obj
@@ -70,12 +70,12 @@ def test_local_manifest_ok(app):
     manifest_id = 'sample:m123'
 
     mresource = ManifestResource()
-    m = mresource.get(manifest_id)
+    m, code = mresource.get(manifest_id)
 
     assert m is not None
 
     # test replace placeholders
-    assert app.config['MANIFESTS_PROXIES']['local']['hostname'] in m['@id']
+    assert app.config['HX_SERVERS']['manifests']['hostname'] in m['@id']
 
     # test that it is in cache now
     m_from_cache = cache.get(manifest_id)

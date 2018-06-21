@@ -36,6 +36,7 @@ requirements = [
     'passlib',
     'Flask-Caching',
     'redis',
+    'requests',
 ]
 
 test_requirements = [
