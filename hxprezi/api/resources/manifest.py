@@ -44,7 +44,7 @@ class ManifestResource(Resource):
             manifest_string = json.dumps(m_object)
         else:
             # it's hx, then look in filesys
-            manifest_string = ManifestResource.fetch_from_file_as_string( source, doc_id)
+            manifest_string = ManifestResource.fetch_from_file_as_string(source, doc_id)
             if manifest_string is None:
                 return None, 404
 
@@ -137,12 +137,12 @@ class ManifestResource(Resource):
         cls, json_string, manifests_service_info, images_service_info):
         # replace placeholders that point to hostnames that we are proxying!
         response_string = json_string.replace(
-            current_app.config['HX_SERVERS']['manifests']['placeholder'],
-            manifests_service_info['hostname']
+            manifests_service_info['placeholder'],
+            current_app.config['HX_SERVERS']['manifests']['hostname'],
         )
         response_string = response_string.replace(
-            current_app.config['HX_SERVERS']['images']['placeholder'],
-            images_service_info['hostname']
+            images_service_info['placeholder'],
+            current_app.config['HX_SERVERS']['images']['hostname'],
         )
         return response_string
 
@@ -152,10 +152,7 @@ def manifest(doc_id):
     prezi_dns = 'prezi.vm'
     image_dns = 'image.vm'
 
-    logger = logging.getLogger(__name__)
-    logger.error('--------------------------------- doc_id is ({0})'.format(doc_id))
     doc_id = doc_id.replace(':', '/')
-    logger.error('--------------------------------- doc_id is ({0})'.format(doc_id))
     doc_path = os.path.join(manifest_path, doc_id + '.json')
 
     with open(doc_path, 'r') as f:

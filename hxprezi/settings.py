@@ -21,11 +21,13 @@ class Config(object):
             'hostname': 'iiif.lib.harvard.edu',
             'path': 'manifests',
             'id_prefix': 'drs:',
+            'placeholder': 'iiif.lib.harvard.edu',
         },
         'huam': {
             'hostname': 'iiif.harvardartmuseums.org',
             'path': 'manifests/object',
             'id_prefix': '',
+            'placeholder': 'iiif.harvardartmuseums.org',
         },
     }
     IMAGES_PROXIES = {
@@ -33,11 +35,13 @@ class Config(object):
             'hostname': 'ids.lib.harvard.edu',
             'path': 'ids/iiif',
             'id_prefix': '',
+            'placeholder': 'ids.lib.harvard.edu',
         },
         'huam': {
             'hostname': 'ids.lib.harvard.edu',
             'path': 'ids/iiif',
             'id_prefix': '',
+            'placeholder': 'ids.lib.harvard.edu',
         },
     }
 
@@ -86,12 +90,12 @@ class Config(object):
         },
         'loggers': {
             'hxprezi': {
-                'level': 'INFO',
+                'level': 'DEBUG',
                 'handlers': ['console'],
                 'propagate': True
             },
             'root': {
-                'level': 'INFO',
+                'level': 'DEBUG',
                 'handlers': ['console'],
             },
         }
