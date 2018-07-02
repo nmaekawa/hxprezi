@@ -34,3 +34,10 @@ def register_blueprints(app):
     app.register_blueprint(auth.views.blueprint)
     app.register_blueprint(api.views.blueprint)
     return None
+
+
+def print_config(app):
+    logger = logging.getLogger(__name__)
+    logger.info('{0} CONFIGURATION SETTINGS:'.format(__name__))
+    for key in app.config:
+        logger.info('{0}: {1}'.format(key, app.config[key]))

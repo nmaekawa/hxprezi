@@ -48,5 +48,14 @@ def init():
     click.echo("created user admin")
 
 
+@cli.command('db_dump')
+@click.option('--outdir', help='output dir')
+def db_dump():
+    """Dump manifests in cache as json strings."""
+
+    from hxprezi.extensions import cache
+    pass
+
+
 if __name__ == "__main__":
     cli()

@@ -6,3 +6,4 @@ pytest-runner
 pytest-flask
 pytest-factoryboy
 factory_boy
+httpretty

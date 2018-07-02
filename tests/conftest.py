@@ -1,5 +1,6 @@
 import json
 import pytest
+from webtest import TestApp
 
 from hxprezi.models import User
 from hxprezi.app import create_app
@@ -9,7 +10,7 @@ from hxprezi.settings import TestConfig
 
 @pytest.fixture
 def app():
-    _app = create_app(TestConfig)
+    _app = create_app(config_object=TestConfig)
     ctx = _app.test_request_context()
     ctx.push()
 

@@ -16,50 +16,55 @@ class Config(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    MANIFESTS_PROXIES = {
-        'drs': {
-            'hostname': 'iiif.lib.harvard.edu',
-            'path': 'manifests',
-            'id_prefix': 'drs:',
-            'placeholder': 'iiif.lib.harvard.edu',
-        },
-        'huam': {
-            'hostname': 'iiif.harvardartmuseums.org',
-            'path': 'manifests/object',
-            'id_prefix': '',
-            'placeholder': 'iiif.harvardartmuseums.org',
-        },
-    }
-    IMAGES_PROXIES = {
-        'drs': {
-            'hostname': 'ids.lib.harvard.edu',
-            'path': 'ids/iiif',
-            'id_prefix': '',
-            'placeholder': 'ids.lib.harvard.edu',
-        },
-        'huam': {
-            'hostname': 'ids.lib.harvard.edu',
-            'path': 'ids/iiif',
-            'id_prefix': '',
-            'placeholder': 'ids.lib.harvard.edu',
-        },
-    }
-
     HX_SERVERS = {
         'manifests': {
-            'hostname': os.environ.get('MANIFESTS_HOSTNAME', 'manifests.vm'),
+            'hostname': os.environ.get('HXPREZI_MANIFESTS_HOSTNAME', 'manifests.vm'),
             'path': 'manifests',
             'id_prefix': '',
             'placeholder': 'oculus.harvardx.harvard.edu',
         },
         'images': {
-            'hostname': os.environ.get('IMAGES_HOSTNAME', 'images.vm'),
+            'hostname': os.environ.get('HXPREZI_IMAGES_HOSTNAME', 'images.vm'),
             'path': 'iiif',
             'id_prefix': '',
             'placeholder': 'images.harvardx.harvard.edu',
         },
     }
-    HX_MANIFESTS_DIR = '/tmp/manifests'
+
+    PROXIES = {
+        'drs': {
+            'manifests': {
+                'hostname': 'iiif.lib.harvard.edu',
+                'path': 'manifests',
+                'id_prefix': 'drs:',
+                'placeholder': 'iiif.lib.harvard.edu',
+            },
+            'images': {
+                'hostname': 'ids.lib.harvard.edu',
+                'path': 'ids/iiif',
+                'id_prefix': '',
+                'placeholder': 'ids.lib.harvard.edu',
+            },
+        },
+        'huam': {
+            'manifests': {
+                'hostname': 'iiif.harvardartmuseums.org',
+                'path': 'manifests/object',
+                'id_prefix': '',
+                'placeholder': 'iiif.harvardartmuseums.org',
+            },
+            'images': {
+                'hostname': 'ids.lib.harvard.edu',
+                'path': 'ids/iiif',
+                'id_prefix': '',
+                'placeholder': 'ids.lib.harvard.edu',
+            },
+        },
+        'HX': HX_SERVERS,
+    }
+
+    LOCAL_MANIFESTS_DIR = os.environ.get(
+        'HXPREZI_LOCAL_MANIFESTS_DIR', '/tmp/manifests')
 
     # Logging config
     LOGGING = {
@@ -134,6 +139,7 @@ class DevConfig(Config):
 class TestConfig(Config):
     """Test configuration."""
 
+    ENV = 'test'
     TESTING = True
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"

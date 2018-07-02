@@ -6,7 +6,7 @@ if dotenv_path:
     load_dotenv(dotenv_path)
 
 from flask.helpers import get_debug_flag
-from hxarc.settings import DevConfig, ProdConfig
+from hxprezi.settings import DevConfig, ProdConfig
 CONFIG = DevConfig if get_debug_flag() else ProdConfig
 
 from hxprezi.app import create_app
