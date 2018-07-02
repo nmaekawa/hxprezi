@@ -1,4 +1,5 @@
 
+import logging
 import os
 import requests
 from urllib.parse import urljoin
@@ -31,6 +32,7 @@ class ManifestResource(Resource):
         # source from proxy? fetch from service
         if source in current_app.config['MANIFESTS_PROXIES']:
             manifests_service_info = current_app.config['MANIFESTS_PROXIES'][source]
+
             m_object, status_code = \
                 ManifestResource.fetch_from_service_as_object(
                     source, doc_id, manifests_service_info)
@@ -81,10 +83,11 @@ class ManifestResource(Resource):
     def fetch_from_service_as_object(cls, source, doc_id, service_info):
         """ http request the manifest from service."""
 
-        service_url = urljoin(
-            'https://{0}'.format(service_info['hostname']),
+        service_url = 'https://{0}/{1}/{2}{3}'.format(
+            service_info['hostname'],
             service_info['path'],
-            '{0}{1}'.format(service_info['id_prefix'], doc_id))
+            service_info['id_prefix'],
+            doc_id)
 
         try:
             r = requests.get(service_url, timeout=REQUEST_TIMEOUT_IN_SEC)
@@ -92,10 +95,11 @@ class ManifestResource(Resource):
             return ManifestsResource.error_response(
                 'unable to fetch manifest from ({0}) - {1}'.format(
                     service_url, e)), 503
+
         if r.status_code != 200:
             return ManifestResource.error_response(
                 'error fetching manifest from ({0}) - {1}'.format(
-                    service_url, e)), r.status_code
+                    service_url, r.status_code)), r.status_code
         try:
             response = r.json()
         except ValueError as e:
