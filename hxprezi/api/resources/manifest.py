@@ -15,38 +15,34 @@ REQUEST_TIMEOUT_IN_SEC = 5
 class ManifestResource(Resource):
     """Single object manifest."""
 
+    @cache.cached()
     def get(self, manifest_id):
-        # search in cache
-        manif = cache.get(manifest_id)
 
-        # if in cache, return manifest
-        if manif is not None:
-            return manif, 200
+        logging.getLogger(__name__).debug(
+            'in get manifestResource({})'.format(manifest_id))
 
         # find if source is hx or proxied
-        source, doc_id = ManifestResource.parse_id(manifest_id)
+        source, doc_id = self.parse_id(manifest_id)
         if source is None:
             status_code = 400
+            error_message = ('invalid manifest_id({});'
+                             ' format <data_source>:<id>').format(manifest_id)
             return ManifestResource.error_response(
-                status_code,
-                'invalid manifest_id; format <data_source>:<id>'), status_code
+                status_code, error_message), status_code
 
         # init service_info as local
-        service_info = ManifestResource.get_service_info(source)
+        service_info = self.get_service_info(source)
 
         if service_info is None:
             # it's hx, then look in filesys
             service_info = app.config['HX_SERVERS']
-            m_object, status_code = \
-                    ManifestResource.fetch_from_file_as_string(
-                        doc_id)
+            m_object, status_code = self.fetch_from_file_as_string(doc_id)
         else:
             # source from proxy? fetch from service
-            service_url = ManifestResource.make_url_for_service(
+            service_url = self.make_url_for_service(
                 doc_id, service_info)
-            m_object, status_code = \
-                ManifestResource.fetch_from_service_as_string(
-                    service_url)
+            m_object, status_code = self.fetch_from_service_as_string(
+                service_url)
 
         if status_code != 200:
             return m_object, status_code
@@ -55,22 +51,18 @@ class ManifestResource(Resource):
         manifest_string = m_object['error_message']
 
         # found it! replace hostname, adjust other stuff
-        fixed_manif_string = ManifestResource.fix_placeholders(
+        fixed_manif_string = self.fix_placeholders(
             manifest_string,
             service_info,
         )
         # decode into json object, again!
         manifest_object = json.loads(fixed_manif_string)
 
-        # stash in cache
-        cache.set(manifest_id, manifest_object)
-
         # return manifest
         return manifest_object, 200
 
 
-    @classmethod
-    def parse_id(cls, manifest_id):
+    def parse_id(self, manifest_id):
         try:
             source, doc_id = manifest_id.split(':')
         except Exception:
@@ -90,16 +82,14 @@ class ManifestResource(Resource):
         }
 
 
-    @classmethod
-    def get_service_info(cls, source):
+    def get_service_info(self, source):
         if source in app.config['PROXIES']:
             return app.config['PROXIES'][source]
         else:
             return None
 
 
-    @classmethod
-    def make_url_for_service(cls, doc_id, service_info):
+    def make_url_for_service(self, doc_id, service_info):
         service_url = 'https://{0}/{1}/{2}{3}'.format(
             service_info['manifests']['hostname'],
             service_info['manifests']['path'],
@@ -109,8 +99,7 @@ class ManifestResource(Resource):
         return service_url
 
 
-    @classmethod
-    def fetch_from_service_as_object(cls, service_url):
+    def fetch_from_service_as_object(self, service_url):
         """ http request the manifest from 3rd party service (proxy)."""
 
         try:
@@ -139,11 +128,10 @@ class ManifestResource(Resource):
         return response, 200
 
 
-    @classmethod
-    def fetch_from_service_as_string(cls, service_url):
+    def fetch_from_service_as_string(self, service_url):
         """ http request the manifest from 3rd party service (proxy)."""
 
-        response, status_code = ManifestResource.fetch_from_service_as_object(
+        response, status_code = self.fetch_from_service_as_object(
             service_url)
         if status_code == 200:
             return ManifestResource.error_response(
@@ -152,8 +140,7 @@ class ManifestResource(Resource):
             return response, status_code
 
 
-    @classmethod
-    def fetch_from_file_as_string(cls, doc_id):
+    def fetch_from_file_as_string(self, doc_id):
         """ load the manifest from local filesys; implies an hx manifest."""
 
         source = 'hx'
@@ -180,9 +167,8 @@ class ManifestResource(Resource):
             status_code, response), status_code
 
 
-    @classmethod
     def fix_placeholders(
-        cls, json_string, service_info):
+        self, json_string, service_info):
         # replace placeholders that point to hostnames that we are proxying!
         response_string = json_string.replace(
             service_info['manifests']['placeholder'],

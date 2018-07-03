@@ -63,7 +63,7 @@ def test_manifest_from_proxy(app):
     tstconfig = TestConfig()
 
     mresource = ManifestResource()
-    proxy_url = ManifestResource.make_url_for_service(
+    proxy_url = mresource.make_url_for_service(
         mid, tstconfig.PROXIES[source])
     drs_sample_manifest = { '@id': proxy_url }
 
@@ -73,7 +73,7 @@ def test_manifest_from_proxy(app):
         body=drs_sample_manifest,
         content_type='application/json')
 
-    m, code = ManifestResource.fetch_from_service_as_string(proxy_url)
+    m, code = mresource.fetch_from_service_as_string(proxy_url)
 
     assert m is not None
     assert code == 200

@@ -14,6 +14,14 @@ class Config(object):
 
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
 
+    # defaults for redis
+    CACHE_KEY_PREFIX = 'hxprezi:'
+    CACHE_REDIS_HOST = os.environ.get('HXPREZI_REDIS_HOST', 'localhost')
+    CACHE_REDIS_PORT = os.environ.get('HXPREZI_REDIS_PORT', 6379)
+    CACHE_REDIS_DB = os.environ.get('HXPREZI_REDIS_DB', 0)
+    CACHE_DEFAULT_TIMEOUT = -1  # never expire
+
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     HX_SERVERS = {
@@ -120,7 +128,11 @@ class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(DB_PATH)
 
     CACHE_TYPE = 'redis'
-    # TODO: add redis config!
+    # uncomment if not using defaults from Config class
+    #CACHE_KEY_PREFIX = 'hxprezi'
+    #CACHE_REDIS_HOST = os.environ.get('HXPREZI_REDIS_HOST', 'localhost')
+    #CACHE_REDIS_PORT = os.environ.get('HXPREZI_REDIS_PORT', 6379)
+    #CACHE_REDIS_DB = os.environ.get('HXPREZI_REDIS_DB', 0)
 
 
 class DevConfig(Config):
