@@ -1,0 +1,11 @@
+# config file for automatic testing at travis-ci.org
+
+language:  python
+python:
+    - 3.6
+    - 3.5
+
+install:
+    - pip install -U tox
+
+script: tox

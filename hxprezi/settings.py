@@ -64,7 +64,8 @@ class Config(object):
     }
 
     LOCAL_MANIFESTS_DIR = os.environ.get(
-        'HXPREZI_LOCAL_MANIFESTS_DIR', '/tmp/manifests')
+        'HXPREZI_LOCAL_MANIFESTS_DIR',
+        os.path.join(PROJECT_ROOT, 'tests/data'))
 
     # Logging config
     LOGGING = {

@@ -40,7 +40,14 @@ requirements = [
 ]
 
 test_requirements = [
-    # TODO: put package test requirements here
+    'tox',
+    'pytest',
+    'pytest-runner',
+    'pytest-flask',
+    'pytest-factoryboy',
+    'factory_boy',
+    'httpretty',
+    'webtest',
 ]
 
 setup(
