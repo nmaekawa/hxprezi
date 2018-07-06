@@ -6,6 +6,9 @@ from urllib.parse import urljoin
 
 from flask import current_app as app
 from flask import json
+from flask import request
+from flask import url_for
+from flask_restful import Api
 from flask_restful import Resource
 
 from hxprezi.extensions import cache
@@ -19,7 +22,8 @@ class ManifestResource(Resource):
     def get(self, manifest_id):
 
         logging.getLogger(__name__).debug(
-            'in get manifestResource({})'.format(manifest_id))
+            'in get manifestResource({}) path({})'.format(
+                manifest_id, request.path))
 
         # find if source is hx or proxied
         source, doc_id = self.parse_id(manifest_id)
@@ -55,11 +59,18 @@ class ManifestResource(Resource):
             manifest_string,
             service_info,
         )
+
         # decode into json object, again!
         manifest_object = json.loads(fixed_manif_string)
 
         # return manifest
         return manifest_object, 200
+
+
+    def delete(self, manifest_id):
+        key = 'view/{}'.format(url_for('api.api_manifest',
+                                       manifest_id=manifest_id))
+        cache.delete(key)
 
 
     def parse_id(self, manifest_id):

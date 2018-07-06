@@ -13,4 +13,5 @@ api = Api(blueprint)
 api.add_resource(UserResource, '/users/<int:user_id>')
 api.add_resource(UserList, '/users')
 api.add_resource(HealthResource, '/health')
-api.add_resource(ManifestResource, '/manifests/<string:manifest_id>')
+api.add_resource(ManifestResource, '/manifests/<string:manifest_id>',
+                 endpoint='api_manifest')
