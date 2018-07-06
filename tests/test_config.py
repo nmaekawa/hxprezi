@@ -9,7 +9,6 @@ def test_production_config():
     app = create_app(ProdConfig)
     assert app.config['ENV'] == 'prod'
     assert app.config['DEBUG'] is False
-    assert app.config['CACHE_TYPE'] == 'redis'
 
 
 def test_dev_config():

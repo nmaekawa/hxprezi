@@ -1,28 +1,30 @@
 
 import httpretty
 import json
+import os
 import pytest
 from unittest import mock
 
 from hxprezi.api.resources import ManifestResource
-from hxprezi.extensions import cache
 from hxprezi.settings import TestConfig
 
 
+def test_manifest_in_filecache(app):
+    manifest_from_file = {
+        'error_message': '{"fake": "object"}',
+        'status_code': 200
+    }
 
-
-def test_manifest_in_cache(app):
-    # put something in cache
-    manifest_id = 'chx:scroll'
-    manifest_obj = {'fake': 'object'}
-    cache.set(manifest_id, manifest_obj)
+    mresource = ManifestResource()
+    mresource.fetch_from_file_as_string = mock.MagicMock(
+        return_value=(manifest_from_file, 200))
 
     # get the fake manifest
-    mresource = ManifestResource()
-    m, code = mresource.get(manifest_id)
+    m, code = mresource.get('blah')
 
+    assert code == 200
     assert m is not None
-    assert m == manifest_obj
+    assert m == json.loads(manifest_from_file['error_message'])
 
 
 def test_invalid_manifest_id(app):
@@ -81,8 +83,8 @@ def test_manifest_from_proxy(app):
     assert proxy_url in json.dumps(m['error_message'])
 
 
-def test_local_manifest_file_doesnt_exist(app):
-    manifest_id = 'chx:scroll'
+def test_local_manifest_source_doesnt_exist(app):
+    manifest_id = 'chx:painting'
 
     mresource = ManifestResource()
     m, code = mresource.get(manifest_id)
@@ -90,24 +92,13 @@ def test_local_manifest_file_doesnt_exist(app):
     assert m is not None
     assert code == 404
     assert 'not found' in m['error_message']
-
-
-def test_local_manifest_path_not_file(app):
-    app.config['LOCAL_MANIFESTS_DIR'] = app.config['PROJECT_ROOT']
-    manifest_id = 'chx:scroll'
-
-    mresource = ManifestResource()
-    m, code = mresource.get(manifest_id)
-
-    assert m is not None
-    assert code == 404
-    assert 'not found' in m['error_message']
-
 
 def test_local_manifest_ok(app):
     manifest_id = 'sample:m123'
 
     mresource = ManifestResource()
+    mresource.save_to_filecache_as_string = mock.MagicMock(return_value=None)
+
     m, code = mresource.get(manifest_id)
 
     assert m is not None
@@ -117,7 +108,6 @@ def test_local_manifest_ok(app):
     assert app.config['HX_SERVERS']['manifests']['hostname'] in m['@id']
 
     # test that it is in cache now
-    m_from_cache = cache.get(manifest_id)
-    assert m_from_cache == m
+    mresource.save_to_filecache_as_string.assert_called()
 
 

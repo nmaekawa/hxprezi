@@ -34,8 +34,6 @@ requirements = [
     'marshmallow-sqlalchemy',
     'python-dotenv',
     'passlib',
-    'Flask-Caching',
-    'redis',
     'requests',
 ]
 

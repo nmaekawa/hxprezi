@@ -11,46 +11,65 @@ from flask import url_for
 from flask_restful import Api
 from flask_restful import Resource
 
-from hxprezi.extensions import cache
 
 REQUEST_TIMEOUT_IN_SEC = 5
 
 class ManifestResource(Resource):
     """Single object manifest."""
 
-    @cache.cached()
     def get(self, manifest_id):
 
-        logging.getLogger(__name__).debug(
-            'in get manifestResource({}) path({})'.format(
-                manifest_id, request.path))
+        # is it in filecache?
+        m_object, status_code = self.fetch_from_file_as_string(
+            manifest_id, from_cache=True)
 
-        # find if source is hx or proxied
-        source, doc_id = self.parse_id(manifest_id)
-        if source is None:
-            status_code = 400
-            error_message = ('invalid manifest_id({});'
-                             ' format <data_source>:<id>').format(manifest_id)
-            return ManifestResource.error_response(
-                status_code, error_message), status_code
+        if status_code == 200:
+            # status_code 200 has manifest_string as error_message...
+            m_string = m_object['error_message']
+            return json.loads(m_string), 200
 
-        # init service_info as local
-        service_info = self.get_service_info(source)
+        # not in cache, is it local?
+        m_object, status_code = self.fetch_from_file_as_string(
+            manifest_id, from_cache=False)
 
-        if service_info is None:
-            # it's hx, then look in filesys
+        if status_code == 200:
             service_info = app.config['HX_SERVERS']
-            m_object, status_code = self.fetch_from_file_as_string(doc_id)
+        # not local; find if we know how to proxy this source
         else:
-            # source from proxy? fetch from service
+            source, doc_id = self.parse_id(manifest_id)
+
+            logging.getLogger(__name__).debug(
+                'in get manifestResource({0}) SOURCE({1}) DOC({2})'.format(
+                    manifest_id, source, doc_id))
+
+            if source is None:
+                e_message = ('invalid manifest_id({}); '
+                             'format <data_source>:<id>').format(manifest_id)
+                return ManifestResource.error_response(
+                    400, e_message), 400
+
+            elif source == 'hx':
+                return ManifestResource.error_response(
+                    404, 'not found ({})'.format(manifest_id)), 404
+
+
+            # init service_info
+            service_info = self.get_service_info(source)
+            if service_info is None:
+                error_message = 'unknown source for manifest_id({0})'.format(manifest_id)
+                return ManifestResource.error_response(404, error_message)
+
+            # fetch from service
             service_url = self.make_url_for_service(
                 doc_id, service_info)
             m_object, status_code = self.fetch_from_service_as_string(
                 service_url)
 
-        if status_code != 200:
-            return m_object, status_code
+            # return error while fetching
+            if status_code != 200:
+                return m_object, status_code
 
+        # at this point we have a manifest_string
         # status_code 200 has manifest_string as error_message...
         manifest_string = m_object['error_message']
 
@@ -60,17 +79,14 @@ class ManifestResource(Resource):
             service_info,
         )
 
-        # decode into json object, again!
+        # save in filesys cache
+        self.save_to_filecache_as_string(manifest_id, fixed_manif_string)
+
+        # decode into json object
         manifest_object = json.loads(fixed_manif_string)
 
         # return manifest
         return manifest_object, 200
-
-
-    def delete(self, manifest_id):
-        key = 'view/{}'.format(url_for('api.api_manifest',
-                                       manifest_id=manifest_id))
-        cache.delete(key)
 
 
     def parse_id(self, manifest_id):
@@ -151,31 +167,44 @@ class ManifestResource(Resource):
             return response, status_code
 
 
-    def fetch_from_file_as_string(self, doc_id):
+    def fetch_from_file_as_string(self, doc_id, from_cache=False):
         """ load the manifest from local filesys; implies an hx manifest."""
 
-        source = 'hx'
-        manifest_path = os.path.join(
-            app.config['LOCAL_MANIFESTS_DIR'],
-            source,
-            '{0}.json'.format(doc_id))
+        if from_cache:
+            basedir = app.config['LOCAL_MANIFESTS_CACHE_DIR']
+        else:
+            basedir = app.config['LOCAL_MANIFESTS_SOURCE_DIR']
 
         manifest_as_json_string = None
+        manifest_path = os.path.join(basedir, '{0}.json'.format(doc_id))
         if os.path.exists(manifest_path) \
-                and os.path.isfile(manifest_path) \
-                and os.access(manifest_path, os.R_OK):
+           and os.path.isfile(manifest_path) \
+           and os.access(manifest_path, os.R_OK):
             with open(manifest_path, 'r') as fd:
                 manifest_as_json_string = fd.read()
 
         if manifest_as_json_string is None:
             status_code = 404
-            response = 'manifest ({0}/{1}) not found'.format(source, doc_id)
+            response = 'local manifest ({0}) not found'.format(doc_id)
         else:
             status_code = 200
             response = manifest_as_json_string
 
         return ManifestResource.error_response(
             status_code, response), status_code
+
+
+    def save_to_filecache_as_string(self, doc_id, manifest_string):
+        """ save manifest string to filesys as hx source.
+
+        once saved, we don't fetch it from 3rd party anymore.
+        """
+        manifest_path = os.path.join(
+            app.config['LOCAL_MANIFESTS_CACHE_DIR'],
+            '{0}.json'.format(doc_id))
+
+        with open(manifest_path, 'w') as fd:
+            fd.write(manifest_string)
 
 
     def fix_placeholders(

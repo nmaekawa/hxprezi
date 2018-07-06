@@ -12,15 +12,8 @@ class Config(object):
     PROJECT_NAME = __name__.split('.')[0]
     PROJECT_NAME_UPPER = PROJECT_NAME.upper()
 
-    CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-
-    # defaults for redis
-    CACHE_KEY_PREFIX = 'hxprezi:'
-    CACHE_REDIS_HOST = os.environ.get('HXPREZI_REDIS_HOST', 'localhost')
-    CACHE_REDIS_PORT = os.environ.get('HXPREZI_REDIS_PORT', 6379)
-    CACHE_REDIS_DB = os.environ.get('HXPREZI_REDIS_DB', 0)
-    CACHE_DEFAULT_TIMEOUT = -1  # never expire
-
+    # not using flask-caching for now
+    CACHE_TYPE = 'null'  # Can be "memcached", "redis", etc.
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -38,6 +31,16 @@ class Config(object):
             'placeholder': 'images.harvardx.harvard.edu',
         },
     }
+
+    LOCAL_MANIFESTS_SOURCE_DIR = os.environ.get(
+        'HXPREZI_LOCAL_MANIFESTS_SOURCE_DIR',
+        os.path.join(PROJECT_ROOT, 'tests/data/hx'))
+    LOCAL_MANIFESTS_CACHE_DIR = os.environ.get(
+        'HXPREZI_LOCAL_MANIFESTS_CACHE_DIR',
+        os.path.join(PROJECT_ROOT, 'tests/data/cache'))
+
+    # ignores cache and considers filesys the only source
+    LOCAL_ONLY = os.environ.get('HXPREZI_LOCAL_ONLY', 'true').lower() == 'true'
 
     PROXIES = {
         'drs': {
@@ -68,12 +71,7 @@ class Config(object):
                 'placeholder': 'ids.lib.harvard.edu',
             },
         },
-        'HX': HX_SERVERS,
     }
-
-    LOCAL_MANIFESTS_DIR = os.environ.get(
-        'HXPREZI_LOCAL_MANIFESTS_DIR',
-        os.path.join(PROJECT_ROOT, 'tests/data'))
 
     # Logging config
     LOGGING = {
@@ -127,13 +125,6 @@ class ProdConfig(Config):
         os.path.join(Config.PROJECT_ROOT, 'database.db'))
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(DB_PATH)
 
-    CACHE_TYPE = 'redis'
-    # uncomment if not using defaults from Config class
-    #CACHE_KEY_PREFIX = 'hxprezi'
-    #CACHE_REDIS_HOST = os.environ.get('HXPREZI_REDIS_HOST', 'localhost')
-    #CACHE_REDIS_PORT = os.environ.get('HXPREZI_REDIS_PORT', 6379)
-    #CACHE_REDIS_DB = os.environ.get('HXPREZI_REDIS_DB', 0)
-
 
 class DevConfig(Config):
     """Development configuration."""
@@ -146,8 +137,6 @@ class DevConfig(Config):
     DB_PATH = os.path.join(Config.PROJECT_ROOT, DB_NAME)
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(DB_PATH)
 
-    CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-
 
 class TestConfig(Config):
     """Test configuration."""
@@ -156,11 +145,5 @@ class TestConfig(Config):
     TESTING = True
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-
-    CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-
-    LOCAL_MANIFESTS_DIR = os.path.join(Config.PROJECT_ROOT, 'tests/data')
-
-
 
 

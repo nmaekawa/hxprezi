@@ -3,7 +3,6 @@
 All extensions here are used as singletons and
 initialized in application factory
 """
-from flask_caching import Cache
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -12,7 +11,6 @@ from passlib.context import CryptContext
 
 
 db = SQLAlchemy()
-cache = Cache()
 jwt = JWTManager()
 ma = Marshmallow()
 migrate = Migrate()

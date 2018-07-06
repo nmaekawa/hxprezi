@@ -4,7 +4,7 @@ import logging.config
 from flask import Flask
 
 from hxprezi import auth, api
-from hxprezi.extensions import cache, db, jwt, migrate
+from hxprezi.extensions import db, jwt, migrate
 from hxprezi.settings import ProdConfig
 
 
@@ -22,7 +22,6 @@ def create_app(config_object=ProdConfig):
 
 def register_extensions(app):
     """Register flask extensions."""
-    cache.init_app(app)
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
