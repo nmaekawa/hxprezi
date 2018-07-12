@@ -17,6 +17,10 @@ class Config(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # iiif image api 2.0 (because loris)
+    HX_SERVICE_CONTEXT = 'http://iiif.io/api/image/2/context.json'
+    HX_SERVICE_PROFILE = 'http://iiif.io/api/image/2/profiles/level2.json'
+
     HX_SERVERS = {
         'manifests': {
             'hostname': os.environ.get('HXPREZI_MANIFESTS_HOSTNAME', 'manifests.vm'),

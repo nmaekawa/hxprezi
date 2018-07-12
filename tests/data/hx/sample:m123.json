@@ -12,8 +12,8 @@
 {
 "resource": {
 "service": {
-"@context": "http://iiif.io/api/image/1/context.json",
-"profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1",
+"@context": "http://iiif.io/api/image/2/context.json",
+"profile": "http://iiif.io/api/image/2/profiles/level2.json",
 "@id": "https://images.harvardx.harvard.edu/ids/iiif/400098039"
 },
 "format": "image/jpeg",
@@ -38,7 +38,7 @@
 "@type": "sc:Sequence"
 }
 ],
-"@context": "http://www.shared-canvas.org/ns/context.json",
+"@context": "http://iiif.io/api/presentation/2/context.json",
 "@id": "https://oculus.harvardx.harvard.edu/manifests/sample:m123",
 "@type": "sc:Manifest",
 "logo": "https://images.harvardx.harvard.edu/iiif/harvard_logo.jpg/full/full/0/default.jpg"

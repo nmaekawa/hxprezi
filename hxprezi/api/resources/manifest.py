@@ -1,4 +1,3 @@
-
 import logging
 import os
 import requests
@@ -14,26 +13,95 @@ from flask_restful import Resource
 
 REQUEST_TIMEOUT_IN_SEC = 5
 
+
+class ManifestResourceResponse(object):
+    """response object for manifest resource.
+
+    depending on status_code, it can provide:
+    status_code == 200
+        manifest_as_json_string
+        manifest_as_json_object
+    status_code != 200
+        error_message (as string)
+    """
+    def __init__(self,
+                 status_code,
+                 json_as_object=None, json_as_string='',
+                 error_message=''):
+        self._status_code = status_code
+        self._json = None
+        self._error_message = ''
+        if status_code == 200:
+            if json_as_object is not None:
+                self._json = json_as_object
+                # this ignores arg json_as_string
+            elif json_as_string:
+                # might raise JsonException if string not parsable json
+                self._json = json.loads(json_as_string)
+            else:
+                raise AttributeError((
+                    'cannot create ManifestResourceResponse with '
+                    'status_code(200) and empty json object'))
+        else:  # need an error_message
+            if error_message:
+                self._error_message = error_message
+            else:
+                # don't blame the messenger!
+                self._error_message = (
+                    'the developer failed to describe the error that just '
+                    'ocurred, thus this lame message')
+    @property
+    def status_code(self):
+        return self._status_code
+
+    @property
+    def manifest_obj(self):
+        return self._json
+    @manifest_obj.setter
+    def manifest_obj(self, value):
+        if self._status_code != 200:
+            raise ValueError(
+                'cannot modify manifest object when status_code({0})'.format(
+                    self._status_code))
+        self._json = value
+
+    @property
+    def manifest_str(self):
+        return json.dumps(self._json)
+    @manifest_str.setter
+    def manifest_str(self, value):
+        if self._status_code != 200:
+            raise ValueError(
+                'cannot modify manifest string when status_code({0})'.format(
+                    self._status_code))
+        self._json = json.loads(value)  # raise exc if not parsable
+
+    @property
+    def error_message(self):
+        return self._error_message
+
+
+
 class ManifestResource(Resource):
     """Single object manifest."""
 
     def get(self, manifest_id):
 
         # is it in filecache?
-        m_object, status_code = self.fetch_from_file_as_string(
-            manifest_id, from_cache=True)
+        resp = self.fetch_from_file(manifest_id, from_cache=True)
 
-        if status_code == 200:
-            # status_code 200 has manifest_string as error_message...
-            m_string = m_object['error_message']
-            return json.loads(m_string), 200
+        if resp.status_code == 200:
+            return resp.manifest_obj, 200
 
         # not in cache, is it local?
-        m_object, status_code = self.fetch_from_file_as_string(
-            manifest_id, from_cache=False)
+        resp = self.fetch_from_file(manifest_id, from_cache=False)
 
-        if status_code == 200:
+        if resp.status_code == 200:
             service_info = app.config['HX_SERVERS']
+
+            # fix service context and profile for local manifests
+            fixed_manif_obj = self.fix_local_service_context(resp.manifest_obj)
+
         # not local; find if we know how to proxy this source
         else:
             source, doc_id = self.parse_id(manifest_id)
@@ -52,7 +120,6 @@ class ManifestResource(Resource):
                 return ManifestResource.error_response(
                     404, 'not found ({})'.format(manifest_id)), 404
 
-
             # init service_info
             service_info = self.get_service_info(source)
             if service_info is None:
@@ -62,31 +129,27 @@ class ManifestResource(Resource):
             # fetch from service
             service_url = self.make_url_for_service(
                 doc_id, service_info)
-            m_object, status_code = self.fetch_from_service_as_string(
-                service_url)
+            resp = self.fetch_from_service(service_url)
 
             # return error while fetching
-            if status_code != 200:
-                return m_object, status_code
-
-        # at this point we have a manifest_string
-        # status_code 200 has manifest_string as error_message...
-        manifest_string = m_object['error_message']
+            if resp.status_code != 200:
+                return ManifestResource.error_response(
+                    resp.status_code, resp.error_message)
 
         # found it! replace hostname, adjust other stuff
         fixed_manif_string = self.fix_placeholders(
-            manifest_string,
+            resp.manifest_str,
             service_info,
         )
 
-        # save in filesys cache
-        self.save_to_filecache_as_string(manifest_id, fixed_manif_string)
+        # save it back to resp obj to jsonify
+        resp.manifest_str = fixed_manif_string
 
-        # decode into json object
-        manifest_object = json.loads(fixed_manif_string)
+        # save in filesys cache
+        self.save_to_filecache_as_string(manifest_id, resp.manifest_str)
 
         # return manifest
-        return manifest_object, 200
+        return resp.manifest_obj, 200
 
 
     def parse_id(self, manifest_id):
@@ -126,48 +189,34 @@ class ManifestResource(Resource):
         return service_url
 
 
-    def fetch_from_service_as_object(self, service_url):
+    def fetch_from_service(self, service_url):
         """ http request the manifest from 3rd party service (proxy)."""
 
         try:
             r = requests.get(service_url, timeout=REQUEST_TIMEOUT_IN_SEC)
         except requests.exceptions.RequestException as e:
             status_code = 503
-            return ManifestResource.error_response(
-                status_code,
-                'unable to fetch manifest from ({0}) - {1}'.format(
-                    service_url, e)), status_code
+            emsg = 'unable to fetch manifest from ({0}) - {1}'.format(
+                service_url, e)
+            return ManifestResourceResponse(503, error_message=emsg)
 
         if r.status_code != 200:
-            return ManifestResource.error_response(
-                r.status_code,
-                'error fetching manifest from ({0}) - {1}'.format(
-                    service_url, r.status_code)), r.status_code
+            emsg = 'error fetching manifest from ({0}) - {1}'.format(
+                service_url, r.status_code)
+            return ManifestResourceResponse(r.status_code, error_messag=emsg)
+
         try:
             response = r.json()
         except ValueError as e:
+            emsg = 'error decoding json response from ({0}) - {1}'.format(
+                    service_url, e)
             status_code = 502
-            return ManifestResource.error_response(
-                status_code,
-                'error decoding json response from ({0}) - {1}'.format(
-                    service_url, e)), status_code
+            return ManifestResource.error_response(502, emsg)
 
-        return response, 200
+        return ManifestResourceResponse(200, json_as_object=response)
 
 
-    def fetch_from_service_as_string(self, service_url):
-        """ http request the manifest from 3rd party service (proxy)."""
-
-        response, status_code = self.fetch_from_service_as_object(
-            service_url)
-        if status_code == 200:
-            return ManifestResource.error_response(
-                status_code, json.dumps(response)), status_code
-        else:
-            return response, status_code
-
-
-    def fetch_from_file_as_string(self, doc_id, from_cache=False):
+    def fetch_from_file(self, doc_id, from_cache=False):
         """ load the manifest from local filesys; implies an hx manifest."""
 
         if from_cache:
@@ -184,14 +233,14 @@ class ManifestResource(Resource):
                 manifest_as_json_string = fd.read()
 
         if manifest_as_json_string is None:
-            status_code = 404
-            response = 'local manifest ({0}) not found'.format(doc_id)
+            response = ManifestResourceResponse(
+                404,  # not found
+                error_message='local manifest ({0}) not found'.format(doc_id))
         else:
-            status_code = 200
-            response = manifest_as_json_string
+            response = ManifestResourceResponse(
+                200, json_as_string=manifest_as_json_string)
 
-        return ManifestResource.error_response(
-            status_code, response), status_code
+        return response
 
 
     def save_to_filecache_as_string(self, doc_id, manifest_string):
@@ -219,5 +268,22 @@ class ManifestResource(Resource):
             app.config['HX_SERVERS']['images']['hostname'],
         )
         return response_string
+
+
+    def fix_local_service_context(self, manifest_obj):
+        # set service context and profile to iiif image api 2.0
+        for sequence in manifest_obj['sequences']:
+            for canvases in sequence['canvases']:
+                for image in canvases['images']:
+                    image['resource']['service']['profile'] = \
+                            app.config['HX_SERVICE_PROFILE']
+                    image['resource']['service']['@context'] = \
+                            app.config['HX_SERVICE_CONTEXT']
+
+        return manifest_obj
+
+
+
+
 
 
