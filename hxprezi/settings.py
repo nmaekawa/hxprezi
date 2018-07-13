@@ -36,15 +36,14 @@ class Config(object):
         },
     }
 
+    HX_REPLACE_HTTPS = False
+
     LOCAL_MANIFESTS_SOURCE_DIR = os.environ.get(
         'HXPREZI_LOCAL_MANIFESTS_SOURCE_DIR',
         os.path.join(PROJECT_ROOT, 'tests/data/hx'))
     LOCAL_MANIFESTS_CACHE_DIR = os.environ.get(
         'HXPREZI_LOCAL_MANIFESTS_CACHE_DIR',
         os.path.join(PROJECT_ROOT, 'tests/data/cache'))
-
-    # ignores cache and considers filesys the only source
-    LOCAL_ONLY = os.environ.get('HXPREZI_LOCAL_ONLY', 'true').lower() == 'true'
 
     PROXIES = {
         'drs': {
@@ -129,6 +128,11 @@ class ProdConfig(Config):
         os.path.join(Config.PROJECT_ROOT, 'database.db'))
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(DB_PATH)
 
+    # in prod, default in NOT to replace https with http (for vagrant cluster)
+    HX_REPLACE_HTTPS = \
+            os.environ.get('HXPREZI_REPLACE_HTTPS', 'false').lower() == 'true'
+
+
 
 class DevConfig(Config):
     """Development configuration."""
@@ -140,6 +144,11 @@ class DevConfig(Config):
     # Put the db file in project root
     DB_PATH = os.path.join(Config.PROJECT_ROOT, DB_NAME)
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(DB_PATH)
+
+    # in dev, it's true to replace https with http (for vagrant cluster)
+    HX_REPLACE_HTTPS = \
+            os.environ.get('HXPREZI_REPLACE_HTTPS', 'true').lower() == 'true'
+
 
 
 class TestConfig(Config):

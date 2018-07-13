@@ -226,6 +226,10 @@ class ManifestResource(Resource):
 
         manifest_as_json_string = None
         manifest_path = os.path.join(basedir, '{0}.json'.format(doc_id))
+
+        logging.getLogger(__name__).debug(
+            '********** manifest_path {}'.format(manifest_path))
+
         if os.path.exists(manifest_path) \
            and os.path.isfile(manifest_path) \
            and os.access(manifest_path, os.R_OK):
@@ -267,6 +271,9 @@ class ManifestResource(Resource):
             service_info['images']['placeholder'],
             app.config['HX_SERVERS']['images']['hostname'],
         )
+        if app.config['HX_REPLACE_HTTPS']:
+            response_string = response_string.replace('https:', 'http:')
+
         return response_string
 
 
