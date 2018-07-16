@@ -3,12 +3,6 @@
 Simplest rest api to serve iiif manifests.
 
 
-# disclaimer
-
-For demo purposes only! provided to show how to setup a hxprezi vagrant
-installation and support to this repo is OUT-OF-SCOPE at this time.
-
-
 # quickstart
 
 To stand a local vagrant hxprezi instance, follow these quick steps:
@@ -47,7 +41,6 @@ manifests server:
     http://localhost:5000/api/v1/manifests/sample:m123
 
 
-
 hxprezi is part of [hximg][https://github.com/nmaekawa/hximg-provision] (hx
 backend for mirador), please refer to its readme for details in how to stand a
 vagrant instance.
@@ -61,33 +54,51 @@ Use tox to create a virtualenv for tests, install all dependencies and run pytes
     $(venv) hxprezi> tox
 
 
-Or run pytest manually:o
+Or run pytest manually
 
     $(venv) hxprezi> pytest tests
 
 
+
 # about configuration
 
-hxprezi serves manifests from the filesys, in the configured
-`HXPREZI_LOCAL_MANIFESTS_DIR` env vars set in dotenv file (in examples below
-`sample.env`).
+hxprezi serves iiif manifests from local filesys, or depending on
+configuration, it fetches the requested manifest from a 3rd party server. Once
+fetched, the manifest is cached and then served from this cache (it won't be
+fetched again).
 
-Once hxprezi finds the manifest file and replace the references to images and
-manifests servers to the ones configured in `HXPREZI_IMAGES_HOSTNAME` and
-`HXPREZI_MANIFESTS_HOSTNAME` env vars, it caches these edited versions in the
-filesys cache dir (`HXPREZI_LOCAL_MANIFESTS_CACHE_DIR` env var) and never looks
-back - a refresh endpoint is to be implemented in the future.
+This cached version has all references to the 3rd party images and manifests
+servers replaced by the 'local' hx images and manifests servers. hxprezi acts as a
+proxy for fetched manifests from then on.
+
+Settings configurable via env vars, defined in the dotenv file (ex:
+sample.env), are:
+
+    # 'local' hx manifests dir
+    HXPREZI_LOCAL_MANIFESTS_SOURCE_DIR
+    ex: HXPREZI_LOCAL_MANIFESTS_SOURCE_DIR='/opt/data/hx'
+    
+    # manifests cache dir
+    HXPREZI_LOCAL_MANIFESTS_CACHE_DIR
+    ex: HXPREZI_LOCAL_MANIFESTS_CACHE_DIR='/opt/data/cache'
+    
+    # hostname that will replace references to 3rd party images servers
+    HXPREZI_IMAGES_HOSTNAME
+    ex: HXPREZI_IMAGES_HOSTNAME='images-dev.site.com'
+    
+    # hostname that will replace references to 3rd party manifests servers
+    ex: HXPREZI_MANIFESTS_HOSTNAME='manifests-dev.site.com'
+
 
 The expected manifest directory is flat, for example, the path for the manifest
 for cellx with id `12345678` should be:
 
     <HXPREZI_LOCAL_MANIFESTS_DIR>/hx/cellx:12345678.json
 
-Say you don't want to serve manifests from Harvard Museums yet, you can drop
-them in the manifests dir, and hxprezi won't try to fetch from the musemus
-servers. For example:
 
-    <HXPREZI_LOCAL_MANIFESTS_DIR>/hx/huam:98765432.json
+For more details on configuration for 3rd party servers, check
+hxprezi/hxprezi/settings.py property `PROXIES` of class `Config`.
+
 
 ---eop
 
