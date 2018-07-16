@@ -10,6 +10,19 @@ from hxprezi.api.resources import ManifestResourceResponse
 from hxprezi.settings import TestConfig
 
 
+def clear_cache(app):
+    # remove all cache files... TODO: mock filesys cache
+    cache_dir = app.config['LOCAL_MANIFESTS_CACHE_DIR']
+    for cache_file in os.listdir(cache_dir):
+        manifest_path = os.path.join(
+            cache_dir, cache_file)
+        try:
+            if os.path.isfile(manifest_path) and manifest_path.endswith('.json'):
+                os.unlink(manifest_path)
+        except Exception as e:
+            print(e)
+
+
 def test_manifest_in_filecache(app):
     manifest_from_file = ManifestResourceResponse(
         200, json_as_string='{"fake": "object"}')
@@ -91,6 +104,9 @@ def test_local_manifest_source_doesnt_exist(app):
     assert 'not found' in m['error_message']
 
 def test_local_manifest_ok(app):
+    # make sure cache is clear
+    clear_cache(app)
+
     manifest_id = 'sample:m123'
     # forcing my hand to pass test in python3.5
     m_content = '{\n"attribution": "Provided by Harvard University",\n"description": "Prosperous Suzhou Scroll",\n"label": "Gusu fan hua tu",\n"sequences": [\n{\n"canvases": [\n{\n"label": "Prosperous Suzhou Scroll",\n"width": 114981,\n"images": [\n{\n"resource": {\n"service": {\n"@context": "http://iiif.io/api/image/2/context.json",\n"profile": "http://iiif.io/api/image/2/profiles/level2.json",\n"@id": "https://images.vm/ids/iiif/400098039"\n},\n"format": "image/jpeg",\n"height": 3466,\n"width": 114981,\n"@id": "https://images.vm/ids/iiif/400098039/full/full/0/native",\n"@type": "dcterms:Image"\n},\n"on": "https://manifests.vm/manifests/sample:m123/canvas/canvas-400098039.json",\n"motivation": "sc:painting",\n"@id": "https://manifests.vm/manifests/sample:m123/annotation/anno-400098039.json",\n"@type": "oa:Annotation"\n}\n],\n"height": 3466,\n"@id": "https://manifests.vm/manifests/sample:m123/canvas/canvas-400098039.json",\n"@type": "sc:Canvas"\n}\n],\n"viewingHint": "individuals",\n"@id": "https://manifests.vm/manifests/sample:m123/sequence/normal.json",\n"@type": "sc:Sequence"\n}\n],\n"@context": "http://iiif.io/api/presentation/2/context.json",\n"@id": "https://manifests.vm/manifests/sample:m123",\n"@type": "sc:Manifest",\n"logo": "https://images.vm/iiif/harvard_logo.jpg/full/full/0/default.jpg"\n}\n'

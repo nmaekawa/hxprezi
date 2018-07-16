@@ -38,6 +38,8 @@ class Config(object):
 
     HX_REPLACE_HTTPS = False
 
+    # manifests in this dir are always served
+    # - if a drs manifest present, it will not fetch from external drs server
     LOCAL_MANIFESTS_SOURCE_DIR = os.environ.get(
         'HXPREZI_LOCAL_MANIFESTS_SOURCE_DIR',
         os.path.join(PROJECT_ROOT, 'tests/data/hx'))
