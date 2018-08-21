@@ -9,3 +9,4 @@ python-dotenv
 passlib
 
 requests
+flask-cors

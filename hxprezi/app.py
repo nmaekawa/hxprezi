@@ -4,6 +4,7 @@ import logging.config
 from flask import Flask
 
 from hxprezi import auth, api
+from hxprezi.extensions import cors
 from hxprezi.extensions import db, jwt, migrate
 from hxprezi.settings import ProdConfig
 
@@ -25,6 +26,15 @@ def register_extensions(app):
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
+
+    # allow cors for all domains
+    cors.init_app(
+        app,
+        max_age=86400,  # one day, matches django-cors-headers default
+        methods=['OPTIONS', 'GET', 'HEAD'],
+        vary_header=False,
+    )
+
     return None
 
 
