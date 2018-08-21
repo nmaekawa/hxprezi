@@ -72,7 +72,7 @@ servers replaced by the 'local' hx images and manifests servers. hxprezi acts as
 proxy for fetched manifests from then on.
 
 Settings configurable via env vars, defined in the dotenv file (ex:
-sample.env), are:
+`sample.env`), are:
 
     # 'local' hx manifests dir
     HXPREZI_LOCAL_MANIFESTS_SOURCE_DIR
@@ -91,13 +91,13 @@ sample.env), are:
 
 
 The expected manifest directory is flat, for example, the path for the manifest
-for cellx with id `12345678` should be:
+for say, `cellx`,  with id `12345678` should be:
 
     <HXPREZI_LOCAL_MANIFESTS_DIR>/hx/cellx:12345678.json
 
 
 For more details on configuration for 3rd party servers, check
-hxprezi/hxprezi/settings.py property `PROXIES` of class `Config`.
+`hxprezi/hxprezi/settings.py`, `Config.PROXIES`.
 
 
 ---eop
