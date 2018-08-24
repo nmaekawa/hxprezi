@@ -87,14 +87,29 @@ class ManifestResource(Resource):
 
     def get(self, manifest_id):
 
+        # parse manifest_id from url
+        source, doc_id, mid = self.parse_id(manifest_id)
+        logging.getLogger(__name__).debug(
+            'in get manifestResource({0}) SOURCE({1}) DOC({2})'.format(
+                manifest_id, source, doc_id))
+
+        if source is None:
+            e_message = ('invalid manifest_id({}); '
+                            'format <data_source>{}id>').format(
+                                manifest_id,
+                                app.config['HX_MANIFEST_ID_SEPARATOR_IN_URL'],
+                            )
+            return ManifestResource.error_response(
+                400, e_message), 400
+
         # is it in filecache?
-        resp = self.fetch_from_file(manifest_id, from_cache=True)
+        resp = self.fetch_from_file(mid, from_cache=True)
 
         if resp.status_code == 200:
             return resp.manifest_obj, 200
 
         # not in cache, is it local?
-        resp = self.fetch_from_file(manifest_id, from_cache=False)
+        resp = self.fetch_from_file(mid, from_cache=False)
 
         if resp.status_code == 200:
             service_info = app.config['HX_SERVERS']
@@ -104,22 +119,7 @@ class ManifestResource(Resource):
 
         # not local; find if we know how to proxy this source
         else:
-            source, doc_id = self.parse_id(manifest_id)
-
-            logging.getLogger(__name__).debug(
-                'in get manifestResource({0}) SOURCE({1}) DOC({2})'.format(
-                    manifest_id, source, doc_id))
-
-            if source is None:
-                e_message = ('invalid manifest_id({}); '
-                             'format <data_source>{}id>').format(
-                                 manifest_id,
-                                 app.config['HX_MANIFEST_ID_SEPARATOR_IN_URL'],
-                             )
-                return ManifestResource.error_response(
-                    400, e_message), 400
-
-            elif source == 'hx':
+            if source == 'hx':  # already searched locally!
                 return ManifestResource.error_response(
                     404, 'not found ({})'.format(manifest_id)), 404
 
@@ -160,12 +160,17 @@ class ManifestResource(Resource):
             source, doc_id = manifest_id.split(
                 app.config['HX_MANIFEST_ID_SEPARATOR_IN_URL'])
         except Exception:
-            return (None, None)
+            return (None, None, None)
         else:
+            # internal manifest_id
+            mid = '{}{}{}'.format(
+                source,
+                app.config['HX_MANIFEST_ID_SEPARATOR_IN_HXPREZI'],
+                doc_id)
             if source in app.config['PROXIES']:
-                return (source, doc_id)
+                return (source, doc_id, mid)
             else:
-                return ('hx', manifest_id)
+                return ('hx', mid, mid)
 
 
     @classmethod

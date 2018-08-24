@@ -36,9 +36,10 @@ class Config(object):
         },
     }
 
-    HX_REPLACE_HTTPS = False
+    # replace ":" with filesys safer "-" see[1] at bottom
     HX_MANIFEST_ID_SEPARATOR_IN_URL = ':'
     HX_MANIFEST_ID_SEPARATOR_IN_HXPREZI = '-'
+    HX_REPLACE_HTTPS = False
 
     # manifests in this dir are always served
     # - if a drs manifest present, it will not fetch from external drs server
@@ -163,4 +164,32 @@ class TestConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
+"""
+[1] 24aug18 naomi:in urls, due to legacy oculus, the manifest_id follows the
+pattern <source>:<doc_id>, where source can be libraries "drs", museums "huam",
+local hx "cellx", "malariax", "vjx", etc.
+
+Because we want the move from legacy oculus to hxprezi to be transparent to
+hximg users, we have to preserve this pattern to identiy manifests.
+
+I've found difficult to resolve whether a manifest_id was local or not since if
+it's, say, "cellx" it has the implied meaning that source is "hx" or local.
+
+To make it easier in the implementation of manifests, the filesys was flattened
+and `source` is part of the manifest filename (instead of a subdir). So,
+manifests_ids end up being a filename in a unix filesys.
+
+The colon ":" in manifest_id is not a very safe char because already has
+meaning in urls (try to scp "drs:123456789.json" use@server:/home/me).
+And, in macos, colon ":" is a reserved char; even though it accepts files with
+":", it can be confusing cause the UIs (like finder) will show a "/" in place
+of ":".
+
+Thus this weird swapping ":"/"-" in manifest_id. Thanks for reading, I really
+felt compelled to explain this. If we decide to go with a db though, it wont'
+matter!
+
+the next rant will be "why filesys?" and the short answer is swap with
+versioned s3 for easy maintenance.
+"""
 
