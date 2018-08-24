@@ -112,7 +112,10 @@ class ManifestResource(Resource):
 
             if source is None:
                 e_message = ('invalid manifest_id({}); '
-                             'format <data_source>:<id>').format(manifest_id)
+                             'format <data_source>{}id>').format(
+                                 manifest_id,
+                                 app.config['HX_MANIFEST_ID_SEPARATOR_IN_URL'],
+                             )
                 return ManifestResource.error_response(
                     400, e_message), 400
 
@@ -154,7 +157,8 @@ class ManifestResource(Resource):
 
     def parse_id(self, manifest_id):
         try:
-            source, doc_id = manifest_id.split(':')
+            source, doc_id = manifest_id.split(
+                app.config['HX_MANIFEST_ID_SEPARATOR_IN_URL'])
         except Exception:
             return (None, None)
         else:

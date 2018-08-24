@@ -37,6 +37,8 @@ class Config(object):
     }
 
     HX_REPLACE_HTTPS = False
+    HX_MANIFEST_ID_SEPARATOR_IN_URL = ':'
+    HX_MANIFEST_ID_SEPARATOR_IN_HXPREZI = '-'
 
     # manifests in this dir are always served
     # - if a drs manifest present, it will not fetch from external drs server
