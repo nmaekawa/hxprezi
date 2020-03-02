@@ -212,7 +212,7 @@ class ManifestResource(Resource):
         if r.status_code != 200:
             emsg = 'error fetching manifest from ({0}) - {1}'.format(
                 service_url, r.status_code)
-            return ManifestResourceResponse(r.status_code, error_messag=emsg)
+            return ManifestResourceResponse(r.status_code, error_message=emsg)
 
         try:
             response = r.json()
