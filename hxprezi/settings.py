@@ -102,7 +102,7 @@ class Config(object):
                 'level': 'DEBUG',
                 'class': 'logging.handlers.RotatingFileHandler',
                 'formatter': 'simple',
-                'filename': 'hxprezi_errors.log',
+                'filename': os.path.join(PROJECT_ROOT, PROJECT_NAME + '_errors.log'),
                 'maxBytes': 10485760,  # 10MB
                 'backupCount': 7,
                 'encoding': 'utf8',
